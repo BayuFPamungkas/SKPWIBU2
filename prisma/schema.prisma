@@ -1,0 +1,57 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Peserta {
+  id       Int           @id @default(autoincrement())
+  nama     String
+  nomor    Int
+  karakter String
+  skor     SkorPeserta[] // ← Tambahkan ini
+}
+
+model Kriteria {
+  id          Int           @id @default(autoincrement())
+  nama        String
+  subKriteria SubKriteria[]
+}
+
+model SubKriteria {
+  id         Int           @id @default(autoincrement())
+  nama       String
+  kriteriaId Int
+  kriteria   Kriteria      @relation(fields: [kriteriaId], references: [id])
+  skor       SkorPeserta[] // ← Tambahkan ini
+}
+
+model Penilaian {
+  id            Int   @id @default(autoincrement())
+  pesertaId     Int
+  kriteriaId    Int
+  subKriteriaId Int
+  skor          Float
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String
+  role     String // 'panitia' atau 'juri'
+}
+
+model SkorPeserta {
+  id            Int   @id @default(autoincrement())
+  pesertaId     Int
+  subKriteriaId Int
+  nilai         Float
+
+  peserta     Peserta     @relation(fields: [pesertaId], references: [id])
+  subKriteria SubKriteria @relation(fields: [subKriteriaId], references: [id])
+
+  @@unique([pesertaId, subKriteriaId])
+}
