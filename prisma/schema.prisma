@@ -12,7 +12,8 @@ model Peserta {
   nama     String
   nomor    Int
   karakter String
-  skor     SkorPeserta[] // ← Tambahkan ini
+  skor     SkorPeserta[]
+  hasil    HasilRanking? 
 }
 
 model Kriteria {
@@ -54,4 +55,13 @@ model SkorPeserta {
   subKriteria SubKriteria @relation(fields: [subKriteriaId], references: [id])
 
   @@unique([pesertaId, subKriteriaId])
+}
+
+model HasilRanking {
+  id         Int     @id @default(autoincrement())
+  pesertaId  Int     @unique
+  totalSkor  Float
+  ranking    Int
+
+  peserta    Peserta @relation(fields: [pesertaId], references: [id])
 }

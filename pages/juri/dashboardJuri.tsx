@@ -43,6 +43,11 @@ export default function DashboardJuri() {
 
     // Skor peserta per subkriteria [pesertaId][subkriteriaId] = skor
     const [skorPeserta, setSkorPeserta] = useState<{ [pesertaId: number]: { [subKriteriaId: number]: number } }>({})
+    const [showStoredRanking, setShowStoredRanking] = useState(false)
+
+    const [rankingBaru, setRankingBaru] = useState<{ pesertaId: number; nama: string; skor: number }[]>([])
+    const [rankingTersimpan, setRankingTersimpan] = useState<{ pesertaId: number; nama: string; skor: number }[]>([])
+
 
     // Ambil data kriteria dan peserta
     useEffect(() => {
@@ -91,6 +96,34 @@ export default function DashboardJuri() {
             console.error('Error fetch peserta:', error)
         }
     }
+
+    const fetchHasilRanking = async () => {
+        if (showStoredRanking) {
+            // Jika sudah tampil, maka sembunyikan
+            setShowStoredRanking(false)
+            return
+        }
+
+        try {
+            const res = await fetch('/api/hasilranking')
+            const data = await res.json()
+
+            if (!Array.isArray(data)) return
+
+            const formatted = data.map((item: any) => ({
+                pesertaId: item.pesertaId,
+                nama: `${item.peserta.nomor}. ${item.peserta.nama}`,
+                skor: item.totalSkor,
+            }))
+
+            const sorted = formatted.sort((a, b) => b.skor - a.skor)
+            setRankingTersimpan(sorted)
+            setShowStoredRanking(true)
+        } catch (err) {
+            console.error('Gagal fetch hasil ranking:', err)
+        }
+    }
+
 
     // Tambah kriteria
     const tambahKriteria = async () => {
@@ -271,8 +304,9 @@ export default function DashboardJuri() {
         });
 
         const sorted = totalPerPeserta.sort((a, b) => b.skor - a.skor);
-        setHasilRanking(sorted);
-        setError('');
+        setRankingBaru(sorted)
+        setHasilRanking(sorted) // jika masih digunakan di export
+        setError('')
     };
 
     // Simpan skor peserta ke database
@@ -300,6 +334,30 @@ export default function DashboardJuri() {
         } catch (err) {
             console.error(err)
             alert('Terjadi kesalahan saat menyimpan skor.')
+        }
+    }
+
+    // simpan hasil ranking ke database
+    const simpanHasilRanking = async () => {
+        if (hasilRanking.length === 0) return
+
+        const payload = hasilRanking.map((h, idx) => ({
+            pesertaId: h.pesertaId,
+            totalSkor: h.skor,
+            ranking: idx + 1,
+        }))
+
+        try {
+            const res = await fetch('/api/hasilranking', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data: payload }),
+            })
+            if (!res.ok) throw new Error('Gagal simpan hasil ranking')
+            alert('Hasil ranking berhasil disimpan.')
+        } catch (err) {
+            console.error(err)
+            alert('Gagal menyimpan hasil ranking.')
         }
     }
 
@@ -488,17 +546,17 @@ export default function DashboardJuri() {
                     <section className="bg-rose-100 mb-8 p-4 rounded shadow-rose-400/50 shadow-lg">
                         <h2 className="text-2xl mb-4 font-semibold">Matriks Perbandingan Kriteria AHP</h2>
                         <div className="mb-4">
-                                <p>
-                                    Masukkan nilai perbandingan antar kriteria.
-                                </p>
-                                <ul className='text-sm text-black list-disc ml-6 mb-2'>
-                                    <li>Nilai 1 berarti sama penting</li>
-                                    <li>Nilai 3 berarti sedikit lebih penting</li>
-                                    <li>Nilai 5 berarti lebih penting</li>
-                                    <li>Nilai 7 berarti sangat penting</li>
-                                    <li>Nilai 9 berarti mutlak penting</li>
-                                </ul>
-                            </div>
+                            <p>
+                                Masukkan nilai perbandingan antar kriteria.
+                            </p>
+                            <ul className='text-sm text-black list-disc ml-6 mb-2'>
+                                <li>Nilai 1 berarti sama penting</li>
+                                <li>Nilai 3 berarti sedikit lebih penting</li>
+                                <li>Nilai 5 berarti lebih penting</li>
+                                <li>Nilai 7 berarti sangat penting</li>
+                                <li>Nilai 9 berarti mutlak penting</li>
+                            </ul>
+                        </div>
                         <div className='relative overflow-x-auto sm:rounded-lg'>
                             <table className="border-collapse border border-pink-300 w-full ">
                                 <thead className='bg-pink-100'>
@@ -731,31 +789,60 @@ export default function DashboardJuri() {
                             </button>
                         </div>
 
-                        {hasilRanking.length > 0 && (
-                            <div className="mt-6">
-                                <h3 className="text-xl font-semibold mb-3">Ranking Peserta</h3>
-                                <div className='relative overflow-x-auto sm:rounded-lg'>
+                        {/* Ranking Baru */}
+                        {rankingBaru.length > 0 && (
+                            <div className="mt-8">
+                                <h3 className="text-xl font-bold mb-3 text-pink-700">Ranking Peserta (Baru Dihitung)</h3>
+                                <div className="overflow-x-auto">
                                     <table className="border-collapse border border-pink-300 w-full">
-                                    <thead className='bg-pink-100'>
-                                        <tr>
-                                            <th className="border border-gray-300 p-2">Ranking</th>
-                                            <th className="border border-gray-300 p-2">Peserta</th>
-                                            <th className="border border-gray-300 p-2">Total Skor</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className='bg-white'>
-                                        {hasilRanking.map((r, idx) => (
-                                            <tr key={r.pesertaId}>
-                                                <td className="border border-gray-300 p-2 text-center">{idx + 1}</td>
-                                                <td className="border border-gray-300 p-2">{r.nama}</td>
-                                                <td className="border border-gray-300 p-2 text-center">{r.skor.toFixed(4)}</td>
+                                        <thead className="bg-pink-100">
+                                            <tr>
+                                                <th className="border border-gray-300 p-2">Ranking</th>
+                                                <th className="border border-gray-300 p-2">Peserta</th>
+                                                <th className="border border-gray-300 p-2">Total Skor</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                                </div>                            
+                                        </thead>
+                                        <tbody className="bg-white">
+                                            {rankingBaru.map((r, idx) => (
+                                                <tr key={r.pesertaId}>
+                                                    <td className="border border-gray-300 p-2 text-center">{idx + 1}</td>
+                                                    <td className="border border-gray-300 p-2">{r.nama}</td>
+                                                    <td className="border border-gray-300 p-2 text-center">{r.skor.toFixed(4)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         )}
+
+                        {/* Ranking Tersimpan */}
+                        {showStoredRanking && rankingTersimpan.length > 0 && (
+                            <div className="mt-8">
+                                <h3 className="text-xl font-bold mb-3 text-purple-700">Ranking Peserta (Tersimpan di Database)</h3>
+                                <div className="overflow-x-auto">
+                                    <table className="border-collapse border border-purple-300 w-full">
+                                        <thead className="bg-purple-100">
+                                            <tr>
+                                                <th className="border border-gray-300 p-2">Ranking</th>
+                                                <th className="border border-gray-300 p-2">Peserta</th>
+                                                <th className="border border-gray-300 p-2">Total Skor</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white">
+                                            {rankingTersimpan.map((r, idx) => (
+                                                <tr key={r.pesertaId}>
+                                                    <td className="border border-gray-300 p-2 text-center">{idx + 1}</td>
+                                                    <td className="border border-gray-300 p-2">{r.nama}</td>
+                                                    <td className="border border-gray-300 p-2 text-center">{r.skor.toFixed(4)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+
 
                     </section>
                 )}
@@ -771,6 +858,18 @@ export default function DashboardJuri() {
                         className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
                     >
                         Export Excel
+                    </button>
+                    <button
+                        onClick={simpanHasilRanking}
+                        className="bg-purple-500 hover:bg-purple-600 text-white mt-4 px-4 py-2 rounded transition"
+                    >
+                        Simpan Hasil Ranking ke Database
+                    </button>
+                    <button
+                        onClick={fetchHasilRanking}
+                        className="bg-purple-500 hover:bg-purple-600 text-white mt-4 px-4 py-2 rounded transition"
+                    >
+                        {showStoredRanking ? 'Sembunyikan Ranking Tersimpan' : 'Tampilkan Ranking Tersimpan dari Database'}
                     </button>
                 </div>
             </div>
