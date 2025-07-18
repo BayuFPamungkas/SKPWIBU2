@@ -20,9 +20,9 @@ export default function Login() {
       setError(data.message || 'Login gagal')
     } else {
       if (data.role === 'panitia') {
-        router.push('/panitia/dashboard')
+        router.push('/panitia/dashboardPanitia')
       } else if (data.role === 'juri') {
-        router.push('/juri/dashboard')
+        router.push('/juri/dashboardJuri')
       }
     }
   }

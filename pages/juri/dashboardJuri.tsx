@@ -359,7 +359,7 @@ export default function DashboardJuri() {
                 {error && <p className="mb-4 text-red-600">{error}</p>}
 
                 {/* Form Tambah Kriteria */}
-                <section className="bg-red-200 mb-8 p-4 rounded shadow-rose-400/50 shadow-lg">
+                <section className="bg-rose-100 mb-8 p-4 rounded shadow-rose-400/50 shadow-lg">
                     <h2 className="text-xl mb-3">Tambah Kriteria</h2>
                     <input
                         type="text"
@@ -377,7 +377,7 @@ export default function DashboardJuri() {
                 </section>
 
                 {/* Form Tambah Sub-Kriteria */}
-                <section className="bg-red-200 mb-8 p-4 rounded shadow-rose-400/50 shadow-lg">
+                <section className="bg-rose-100 mb-8 p-4 rounded shadow-rose-400/50 shadow-lg">
                     <h2 className="text-xl mb-3">Tambah Sub-Kriteria</h2>
                     <select
                         className="flex rounded-md bg-white p-2 mb-3 w-53"
@@ -407,7 +407,7 @@ export default function DashboardJuri() {
                 </section>
 
                 {/* Daftar Kriteria & Subkriteria */}
-                <section className="bg-red-200 mb-8 p-4 rounded shadow-rose-400/50 shadow-lg">
+                <section className="bg-red-100 mb-8 p-4 rounded shadow-rose-400/50 shadow-lg">
                     <h2 className="text-xl mb-3">Daftar Kriteria & Sub-Kriteria</h2>
                     {kriteria.length === 0 ? (
                         <p>Belum ada kriteria</p>
@@ -485,15 +485,20 @@ export default function DashboardJuri() {
 
                 {/* Matriks Perbandingan Kriteria */}
                 {kriteria.length >= 2 && (
-                    <section className="bg-red-200 mb-8 p-4 rounded shadow-rose-400/50 shadow-lg">
+                    <section className="bg-rose-100 mb-8 p-4 rounded shadow-rose-400/50 shadow-lg">
                         <h2 className="text-2xl mb-4 font-semibold">Matriks Perbandingan Kriteria AHP</h2>
                         <div className="mb-4">
-                            <p className="text-sm text-black">
-                                Masukkan nilai perbandingan antar kriteria. Nilai 1 berarti sama penting,
-                                nilai 3 berarti sedikit lebih penting, 5 berarti lebih penting,
-                                7 berarti sangat penting, dan 9 berarti mutlak penting.
-                            </p>
-                        </div>
+                                <p>
+                                    Masukkan nilai perbandingan antar kriteria.
+                                </p>
+                                <ul className='text-sm text-black list-disc ml-6 mb-2'>
+                                    <li>Nilai 1 berarti sama penting</li>
+                                    <li>Nilai 3 berarti sedikit lebih penting</li>
+                                    <li>Nilai 5 berarti lebih penting</li>
+                                    <li>Nilai 7 berarti sangat penting</li>
+                                    <li>Nilai 9 berarti mutlak penting</li>
+                                </ul>
+                            </div>
                         <div className='relative overflow-x-auto sm:rounded-lg'>
                             <table className="border-collapse border border-pink-300 w-full ">
                                 <thead className='bg-pink-100'>
@@ -570,7 +575,7 @@ export default function DashboardJuri() {
                 {/* Matriks Perbandingan Subkriteria per Kriteria */}
                 {kriteria.map((k) => (
                     k.subKriteria.length >= 2 && (
-                        <section key={k.id} className="bg-red-200 mb-8 p-4 rounded shadow-rose-400/50 shadow-lg">
+                        <section key={k.id} className="bg-rose-100 mb-8 p-4 rounded shadow-rose-400/50 shadow-lg">
                             <h2 className="text-2xl mb-4 font-semibold">
                                 Matriks Perbandingan Sub-Kriteria untuk "{k.nama}"
                             </h2>
@@ -662,7 +667,7 @@ export default function DashboardJuri() {
 
                 {/* Input Skor Peserta per Subkriteria */}
                 {kriteria.some(k => k.subKriteria.length > 0) && peserta.length > 0 && (
-                    <section className="bg-red-200 mb-8 p-4 rounded shadow-rose-400/50 shadow-lg">
+                    <section className="bg-rose-100 mb-8 p-4 rounded shadow-rose-400/50 shadow-lg">
                         <h2 className="text-2xl mb-4 font-semibold">Input Skor Peserta per Sub-Kriteria</h2>
                         <div className='relative overflow-x-auto sm:rounded-lg'>
                             <ul className="text-sm text-black mb-2">
@@ -729,15 +734,16 @@ export default function DashboardJuri() {
                         {hasilRanking.length > 0 && (
                             <div className="mt-6">
                                 <h3 className="text-xl font-semibold mb-3">Ranking Peserta</h3>
-                                <table className="border-collapse border border-gray-300 w-full">
-                                    <thead>
+                                <div className='relative overflow-x-auto sm:rounded-lg'>
+                                    <table className="border-collapse border border-pink-300 w-full">
+                                    <thead className='bg-pink-100'>
                                         <tr>
                                             <th className="border border-gray-300 p-2">Ranking</th>
                                             <th className="border border-gray-300 p-2">Peserta</th>
                                             <th className="border border-gray-300 p-2">Total Skor</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody className='bg-white'>
                                         {hasilRanking.map((r, idx) => (
                                             <tr key={r.pesertaId}>
                                                 <td className="border border-gray-300 p-2 text-center">{idx + 1}</td>
@@ -747,6 +753,7 @@ export default function DashboardJuri() {
                                         ))}
                                     </tbody>
                                 </table>
+                                </div>                            
                             </div>
                         )}
 
