@@ -4,33 +4,40 @@ import prisma from '@/lib/db'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
-    const { data } = req.body
-    if (!Array.isArray(data)) {
-      return res.status(400).json({ message: 'Invalid data format' })
+    const { data, acara, tanggal } = req.body;
+
+    if (!acara || !tanggal) {
+      return res.status(400).json({ error: 'Acara dan tanggal wajib diisi' });
     }
 
-    try {
-      await prisma.hasilRanking.deleteMany()
-      await prisma.hasilRanking.createMany({ data })
-      return res.status(200).json({ message: 'Hasil ranking disimpan' })
-    } catch (error) {
-      console.error(error)
-      return res.status(500).json({ message: 'Gagal simpan hasil ranking' })
-    }
+    const parsedTanggal = new Date(tanggal);
+
+    const hasil = await prisma.hasilRanking.createMany({
+      data: data.map((item: any) => ({
+        ...item,
+        acara,
+        tanggal: parsedTanggal,
+      })),
+    });
+
+    return res.status(200).json(hasil);
   }
 
   // === INI BAGIAN YANG PENTING ===
   if (req.method === 'GET') {
-    try {
-      const result = await prisma.hasilRanking.findMany({
-        include: { peserta: true },
-        orderBy: { ranking: 'asc' }
-      })
-      return res.status(200).json(result) // <-- HARUS array
-    } catch (error) {
-      console.error(error)
-      return res.status(500).json({ message: 'Gagal ambil hasil ranking' })
+    const { tanggal } = req.query;
+    if (!tanggal) {
+      return res.status(400).json({ error: 'Tanggal wajib diisi' });
     }
+
+    const parsedTanggal = new Date(tanggal);
+
+    const hasil = await prisma.hasilRanking.findMany({
+      where: { tanggal: parsedTanggal },
+      include: { peserta: true },
+    });
+
+    return res.status(200).json(hasil);
   }
 
   return res.status(405).end()

@@ -48,6 +48,9 @@ export default function DashboardJuri() {
     const [rankingBaru, setRankingBaru] = useState<{ pesertaId: number; nama: string; skor: number }[]>([])
     const [rankingTersimpan, setRankingTersimpan] = useState<{ pesertaId: number; nama: string; skor: number }[]>([])
 
+    const [namaAcara, setNamaAcara] = useState('');
+    const [tanggalAcara, setTanggalAcara] = useState('');
+
 
     // Ambil data kriteria dan peserta
     useEffect(() => {
@@ -99,28 +102,32 @@ export default function DashboardJuri() {
 
     const fetchHasilRanking = async () => {
         if (showStoredRanking) {
-            // Jika sudah tampil, maka sembunyikan
-            setShowStoredRanking(false)
-            return
+            setShowStoredRanking(false);
+            return;
+        }
+
+        if (!tanggalAcara) {
+            alert('Masukkan tanggal acara untuk melihat hasil ranking.');
+            return;
         }
 
         try {
-            const res = await fetch('/api/hasilranking')
-            const data = await res.json()
+            const res = await fetch(`/api/hasilranking?tanggal=${tanggalAcara}`);
+            const data = await res.json();
 
-            if (!Array.isArray(data)) return
+            if (!Array.isArray(data)) return;
 
             const formatted = data.map((item: any) => ({
                 pesertaId: item.pesertaId,
                 nama: `${item.peserta.nomor}. ${item.peserta.nama}`,
                 skor: item.totalSkor,
-            }))
+            }));
 
-            const sorted = formatted.sort((a, b) => b.skor - a.skor)
-            setRankingTersimpan(sorted)
-            setShowStoredRanking(true)
+            const sorted = formatted.sort((a, b) => b.skor - a.skor);
+            setRankingTersimpan(sorted);
+            setShowStoredRanking(true);
         } catch (err) {
-            console.error('Gagal fetch hasil ranking:', err)
+            console.error('Gagal fetch hasil ranking:', err);
         }
     }
 
@@ -339,25 +346,29 @@ export default function DashboardJuri() {
 
     // simpan hasil ranking ke database
     const simpanHasilRanking = async () => {
-        if (hasilRanking.length === 0) return
+        if (hasilRanking.length === 0) return;
+        if (!namaAcara || !tanggalAcara) {
+            alert('Isi nama acara dan tanggal terlebih dahulu.');
+            return;
+        }
 
         const payload = hasilRanking.map((h, idx) => ({
             pesertaId: h.pesertaId,
             totalSkor: h.skor,
             ranking: idx + 1,
-        }))
+        }));
 
         try {
             const res = await fetch('/api/hasilranking', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ data: payload }),
-            })
-            if (!res.ok) throw new Error('Gagal simpan hasil ranking')
-            alert('Hasil ranking berhasil disimpan.')
+                body: JSON.stringify({ data: payload, acara: namaAcara, tanggal: tanggalAcara }),
+            });
+            if (!res.ok) throw new Error('Gagal simpan hasil ranking');
+            alert('Hasil ranking berhasil disimpan.');
         } catch (err) {
-            console.error(err)
-            alert('Gagal menyimpan hasil ranking.')
+            console.error(err);
+            alert('Gagal menyimpan hasil ranking.');
         }
     }
 
@@ -726,6 +737,20 @@ export default function DashboardJuri() {
                 {/* Input Skor Peserta per Subkriteria */}
                 {kriteria.some(k => k.subKriteria.length > 0) && peserta.length > 0 && (
                     <section className="bg-rose-100 mb-8 p-4 rounded shadow-rose-400/50 shadow-lg">
+                        <h2 className="text-xl mb-3">Informasi Acara</h2>
+                        <input
+                            type="text"
+                            placeholder="Nama Acara Cosplay"
+                            className="bg-white px-4 py-2 mb-4 border border-pink-300 rounded-lg w-full"
+                            value={namaAcara}
+                            onChange={(e) => setNamaAcara(e.target.value)}
+                        />
+                        <input
+                            type="date"
+                            className="bg-white px-4 py-2 mb-4 border border-pink-300 rounded-lg w-full"
+                            value={tanggalAcara}
+                            onChange={(e) => setTanggalAcara(e.target.value)}
+                        />
                         <h2 className="text-2xl mb-4 font-semibold">Input Skor Peserta per Sub-Kriteria</h2>
                         <div className='relative overflow-x-auto sm:rounded-lg'>
                             <ul className="text-sm text-black mb-2">

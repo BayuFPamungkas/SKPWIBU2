@@ -62,6 +62,8 @@ model HasilRanking {
   pesertaId  Int     @unique
   totalSkor  Float
   ranking    Int
-
+  acara      String    // Nama acara cosplay
+  tanggal    DateTime  // Tanggal kompetisi
+  
   peserta    Peserta @relation(fields: [pesertaId], references: [id])
 }
