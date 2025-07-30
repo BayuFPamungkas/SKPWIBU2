@@ -13,7 +13,7 @@ model Peserta {
   nomor    Int
   karakter String
   skor     SkorPeserta[]
-  hasil    HasilRanking? 
+  hasil    HasilRanking[]
 }
 
 model Kriteria {
@@ -59,7 +59,7 @@ model SkorPeserta {
 
 model HasilRanking {
   id         Int     @id @default(autoincrement())
-  pesertaId  Int     @unique
+  pesertaId  Int
   totalSkor  Float
   ranking    Int
   acara      String    // Nama acara cosplay

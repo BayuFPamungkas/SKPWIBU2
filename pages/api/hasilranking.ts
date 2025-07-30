@@ -25,20 +25,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // === INI BAGIAN YANG PENTING ===
   if (req.method === 'GET') {
-    const { tanggal } = req.query;
-    if (!tanggal) {
-      return res.status(400).json({ error: 'Tanggal wajib diisi' });
+    const { tanggal, acara } = req.query;
+    if (!tanggal && !acara) {
+      return res.status(400).json({ error: 'Tanggal dan acara wajib diisi' });
     }
 
-    const parsedTanggal = new Date(tanggal);
-
+    const parsedTanggal = new Date(tanggal as string);
     const hasil = await prisma.hasilRanking.findMany({
-      where: { tanggal: parsedTanggal },
+      where: {
+    AND: [
+      { tanggal: parsedTanggal },
+      { acara: acara as string }
+    ],
+  },
       include: { peserta: true },
     });
 
     return res.status(200).json(hasil);
   }
+
 
   return res.status(405).end()
 }

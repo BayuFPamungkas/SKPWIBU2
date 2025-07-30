@@ -51,6 +51,10 @@ export default function DashboardJuri() {
     const [namaAcara, setNamaAcara] = useState('');
     const [tanggalAcara, setTanggalAcara] = useState('');
 
+    const [showSelectModal, setShowSelectModal] = useState(false);
+    const [selectedTanggal, setSelectedTanggal] = useState('');
+    const [selectedAcara, setSelectedAcara] = useState('');
+
 
     // Ambil data kriteria dan peserta
     useEffect(() => {
@@ -106,13 +110,13 @@ export default function DashboardJuri() {
             return;
         }
 
-        if (!tanggalAcara) {
-            alert('Masukkan tanggal acara untuk melihat hasil ranking.');
+        if (!selectedAcara || !selectedTanggal) {
+            alert('Pilih nama acara dan tanggal terlebih dahulu.');
             return;
         }
 
         try {
-            const res = await fetch(`/api/hasilranking?tanggal=${tanggalAcara}`);
+            const res = await fetch(`/api/hasilranking?tanggal=${selectedTanggal}&acara=${encodeURIComponent(selectedAcara)}`);
             const data = await res.json();
 
             if (!Array.isArray(data)) return;
@@ -126,6 +130,7 @@ export default function DashboardJuri() {
             const sorted = formatted.sort((a, b) => b.skor - a.skor);
             setRankingTersimpan(sorted);
             setShowStoredRanking(true);
+            setShowSelectModal(false); // Tutup modal setelah fetch
         } catch (err) {
             console.error('Gagal fetch hasil ranking:', err);
         }
@@ -891,13 +896,52 @@ export default function DashboardJuri() {
                         Simpan Hasil Ranking ke Database
                     </button>
                     <button
-                        onClick={fetchHasilRanking}
+                        onClick={() => setShowSelectModal(true)}
                         className="bg-purple-500 hover:bg-purple-600 text-white mt-4 px-4 py-2 rounded transition"
                     >
-                        {showStoredRanking ? 'Sembunyikan Ranking Tersimpan' : 'Tampilkan Ranking Tersimpan dari Database'}
+                        {showStoredRanking ? 'Sembunyikan Ranking Tersimpan' : 'Pilih Acara & Tanggal Ranking'}
                     </button>
                 </div>
             </div>
+            {showSelectModal && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white rounded-lg shadow-lg p-6 w-96">
+                        <h2 className="text-xl font-bold mb-4">Pilih Acara & Tanggal</h2>
+
+                        <input
+                            type="text"
+                            placeholder="Nama Acara"
+                            value={selectedAcara}
+                            onChange={(e) => setSelectedAcara(e.target.value)}
+                            className="w-full mb-3 p-2 border rounded"
+                        />
+
+                        <input
+                            type="date"
+                            value={selectedTanggal}
+                            onChange={(e) => setSelectedTanggal(e.target.value)}
+                            className="w-full mb-4 p-2 border rounded"
+                        />
+
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() => setShowSelectModal(false)}
+                                className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                onClick={fetchHasilRanking}
+                                className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
+                            >
+                                Tampilkan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
         </div>
     )
 }
